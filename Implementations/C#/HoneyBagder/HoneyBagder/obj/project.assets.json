@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\barte\\Desktop\\Programowańsko\\HoneyBagder\\HoneyBagder\\HoneyBagder.csproj",
+      "projectUniqueName": "C:\\Users\\barte\\Desktop\\studia\\Honey_Badger_Algorithm\\Honey-Badger-Algorithm\\Implementations\\C#\\HoneyBagder\\HoneyBagder\\HoneyBagder.csproj",
       "projectName": "HoneyBagder",
-      "projectPath": "C:\\Users\\barte\\Desktop\\Programowańsko\\HoneyBagder\\HoneyBagder\\HoneyBagder.csproj",
+      "projectPath": "C:\\Users\\barte\\Desktop\\studia\\Honey_Badger_Algorithm\\Honey-Badger-Algorithm\\Implementations\\C#\\HoneyBagder\\HoneyBagder\\HoneyBagder.csproj",
       "packagesPath": "C:\\Users\\barte\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\barte\\Desktop\\Programowańsko\\HoneyBagder\\HoneyBagder\\obj\\",
+      "outputPath": "C:\\Users\\barte\\Desktop\\studia\\Honey_Badger_Algorithm\\Honey-Badger-Algorithm\\Implementations\\C#\\HoneyBagder\\HoneyBagder\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\barte\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 
 namespace HoneyBadger 
 {
@@ -32,7 +31,8 @@ namespace HoneyBadger
 
         static private double[] CreateAgentsFitness(double[,] x, int population, int dimensions)
         {
-            f = new double[population];
+            var f = new double[population];
+            return f;
         }
 
         static private double[,] HoneyBadgerAlgorithm(int population,
@@ -49,7 +49,7 @@ namespace HoneyBadger
         }
         static void Main(string[] args)
         {
-            Console.WriteLine(Epsilon);
+
         }
     }
 }

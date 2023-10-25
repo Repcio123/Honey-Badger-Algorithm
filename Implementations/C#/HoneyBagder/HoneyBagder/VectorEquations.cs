@@ -34,33 +34,37 @@ namespace HoneyBadger
         }
         public static double[] Multiply(double[] v1, double[] v2)
         {
+            double[] v = new double[v1.Length];
             for (int i = 0; i < v1.Length; i++)
             {
-                v1[i] *= v2[i];
-            }
-            return v1;
-        }
-        public static double[] ScalarMultiply(double[] v, double scalar)
-        {
-            for (int i = 0; i < v.Length; i++)
-            {
-                v[i] *= scalar;
+                v[i] = v1[i] * v2[i];
             }
             return v;
         }
-        public static double[] ScalarAdd(double[] v, double scalar)
+        public static double[] ScalarMultiply(double[] v1, double scalar)
         {
+            double[] v = new double[v1.Length];
             for (int i = 0; i < v.Length; i++)
             {
-                v[i] += scalar;
+                v[i] = v1[i] * scalar;
             }
             return v;
         }
-        public static double[] Power(double[] v, double power)
+        public static double[] ScalarAdd(double[] v1, double scalar)
         {
+            double[] v = new double[v1.Length];
             for (int i = 0; i < v.Length; i++)
             {
-                v[i] = Math.Pow(v[i], power);
+                v[i] = v1[i] + scalar;
+            }
+            return v;
+        }
+        public static double[] Power(double[] v1, double power)
+        {
+            double[] v = new double[v1.Length];
+            for (int i = 0; i < v.Length; i++)
+            {
+                v[i] = Math.Pow(v1[i], power);
             }
             return v;
         }
@@ -68,11 +72,12 @@ namespace HoneyBadger
         {
             if (v1.Length == v2.Length)
             {
+                double[] v = new double[v1.Length];
                 for (int i = 0; i < v1.Length; i++)
                 {
-                    v1[i] /= v2[i];
+                    v[i] = v1[i] / v2[i];
                 }
-                return v1;
+                return v;
             }
             else
             {

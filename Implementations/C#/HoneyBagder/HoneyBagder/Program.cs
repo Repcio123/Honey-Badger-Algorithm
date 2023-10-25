@@ -58,10 +58,9 @@ namespace HoneyBadger
 
             for (int i = 0; i < iterations; i++)
             {
+                double a = c * Math.Exp(-(double)i / (double)iterations);
                 for (int population_index = 0; population_index < population - 1; population_index++)
                 {
-                    double a = c * Math.Exp(-i / iterations);
-
                     double flag = random.NextDouble() < 0.5 ? 1 : -1;
                     double[] new_position;
                     if (random.NextDouble() < 0.5)
@@ -87,8 +86,8 @@ namespace HoneyBadger
                                     ),
                                     2
                                 ),
-                                ScalarMultiply(
-                                    ScalarAdd(
+                                ScalarAdd(
+                                    ScalarMultiply(
                                         Power(
                                             Substract(
                                                 positions[best_row_idx],
@@ -96,9 +95,9 @@ namespace HoneyBadger
                                             ),
                                             2
                                         ),
-                                    Epsilon
+                                    4.0 * Math.PI
                                     ),
-                                4.0 * Math.PI
+                                Epsilon
                                 )
                             ),
                             random.NextDouble()
@@ -108,12 +107,12 @@ namespace HoneyBadger
                             Add(
                                 positions[best_row_idx],
                                 Add(
-                                    Multiply(
-                                        targetSmellIntensity,
-                                        ScalarMultiply(
-                                            positions[best_row_idx],
-                                            b * flag
-                                        )
+                                    ScalarMultiply(
+                                        Multiply(
+                                            targetSmellIntensity,
+                                            positions[best_row_idx]
+                                        ),
+                                        b * flag
                                     ),
                                     ScalarAdd(
                                         ScalarMultiply(
@@ -133,12 +132,12 @@ namespace HoneyBadger
                         // Exploitation 
                         new_position = Add(positions[best_row_idx], ScalarMultiply(positions[best_row_idx], flag * random.NextDouble() * a));
                     }
-
+                    //double[] test = { 3, 0.5 };
                     double new_prey_value = fn.Executor(new_position);
-
+                    //Console.WriteLine(new_prey_value.ToString());
                     if(new_prey_value < population_futness_values[population_index]) {
                         positions[population_index] = new_position;
-                        
+
                         population_futness_values[population_index] = new_prey_value;
 
                         if (new_prey_value < best_fitness_value) {
@@ -214,12 +213,12 @@ namespace HoneyBadger
             Func<double[], double> executor = (double[] parameters) => {
                 double x = parameters[0];
                 double y = parameters[1];
-                return Math.Pow(1.5 - x + x * y, 2) + Math.Pow(2.25 - x + x * y * y, 2) * Math.Pow(2.625 - x + x * y * y * y, 2);
+                return Math.Pow(1.5 - x + x * y, 2) + Math.Pow(2.25 - x + x * y * y, 2) + Math.Pow(2.625 - x + x * y * y * y, 2);
             };
             ObjectiveFunction beatle = new ObjectiveFunction(domain, executor);
-            (var b, var c) = optimum();
-            //var b = 0.5;
-            //var c = 0.5;
+            //(var b, var c) = optimum();
+            var b = 0.5;
+            var c = 0.5;
             Console.WriteLine(b.ToString() + " " + c.ToString());
             HoneyBadgerAlgorithm(20, 30, b, c, beatle, true);
             //HoneyBadgerAlgorithm(20, 30, 0.5, 0.5, beatle);

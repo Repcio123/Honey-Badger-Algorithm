@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<document>
+    <head>
+        <script>
+            function start(event) {
+                const mainForm = document.getElementById('main-form');
+                const form = new FormData(mainForm);
+                event.preventDefault();
+                event.stopPropagation();
+                const evtSource = new EventSource(`/run?population=${form.get('population')}&iterations=${form.get('iterations')}`);
+
+                evtSource.onmessage = (event) => {
+                    console.log(event)
+                    if ('END-OF-STREAM' == event.data) {
+                        return evtSource.close(); // stop retryad
+                    }
+
+
+
+                };
+                evtSource.onerror = (err) => {
+                    console.error("EventSource failed:", err);
+                };
+            }
+            function init() {
+                const mainForm = document.getElementById('main-form')
+                mainForm.onsubmit = start;
+            }
+            window.onload = init;
+        </script>
+    </head>
+    <body>
+        gadacas
+        <form id="main-form" onsubmit="start(); return false">
+            <label for="population">Populacja</label>
+            <input name="population" id="population"></input>
+            <label for="iterations">Iteracje</label>
+            <input name="iterations" id="iterations"></input>
+            <button id="submit" type="submit">run</button>
+        </form>
+    </body>
+</document>

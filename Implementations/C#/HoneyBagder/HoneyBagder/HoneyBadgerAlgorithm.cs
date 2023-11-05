@@ -142,21 +142,17 @@ namespace HoneyBagder
                         {
                             best_fitness_value = new_prey_value;
                             best_row_idx = population_index;
+                            yield return new HoneyBadgerResultDTO
+                            {
+                                value = best_fitness_value,
+                                parameters = positions[best_row_idx],
+                            };
                         }
-                        yield return new HoneyBadgerResultDTO
-                        {
-                            value = best_fitness_value,
-                            parameters = positions[best_row_idx],
-                        };
                     }
                 }
             }
 
-            yield return new HoneyBadgerResultDTO
-            {
-                value = best_fitness_value,
-                parameters = positions[best_row_idx],
-            };
+            yield break;
         }
 
         static public HoneyBadgerResultDTO Run(

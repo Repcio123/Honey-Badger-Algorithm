@@ -19,7 +19,7 @@
                 const evtSource = new EventSource(`/run?population=${form.get('population')}&iterations=${form.get('iterations')}`);
 
                 evtSource.onmessage = (event) => {
-                    if ('END-OF-STREAM' == event.data) {
+                    if ('"END-OF-STREAM"' == event.data) {
                         return evtSource.close();
                     }
                     replaceResultPanelContent(JSON.parse(event.data))

@@ -23,7 +23,8 @@ namespace HoneyBagder.WebServer
 
             while (true)
             {
-                router.handleRequest(listener.GetContext());
+                HttpListenerContext context = listener.GetContext();
+                router.handleRequest(context);
             }
         }
     }

@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Web;
+using System.IO;
 
 namespace HoneyBagder.WebServer
 {
@@ -34,6 +35,37 @@ namespace HoneyBagder.WebServer
 
         static int? ToNullableInt(string? val)
             => int.TryParse(val, out var i) ? (int)i : null;
+        
+        static void PushAsJSON(Stream output, object message)
+        {
+            var jsonString = JsonSerializer.Serialize(message);
+            var data = $"data: {jsonString}\r\r";
+            var dataBytes = Encoding.UTF8.GetBytes(data);
+            output.WriteAsync(dataBytes);
+            output.FlushAsync();
+        }
+
+        public static void Debounced<T>(IEnumerable<T> generator, Action<T> onElement, int actionMilisecondInterval = 100)
+        {
+            bool isLastResultStale = false;
+            DateTime debounce = DateTime.Now;
+            T lastResult = default(T)!;
+            foreach (T result in generator)
+            {
+                if (DateTime.Now > debounce)
+                {
+                    debounce = DateTime.Now.AddMilliseconds(actionMilisecondInterval);
+                    isLastResultStale = false;
+                    onElement(result);
+                }
+                lastResult = result;
+                isLastResultStale = true;
+            }
+            if (lastResult != null && isLastResultStale)
+            {
+                onElement(lastResult);
+            }
+        }
 
         static async void RunAlgorithm(HttpListenerContext ctx)
         {
@@ -60,7 +92,7 @@ namespace HoneyBagder.WebServer
                 return;
             }
 
-            int? iterations = ToNullableInt(query.Get("population"));
+            int? iterations = ToNullableInt(query.Get("iterations"));
             if (iterations == null)
             {
                 return;
@@ -68,18 +100,10 @@ namespace HoneyBagder.WebServer
 
             using (Stream output = resp.OutputStream)
             {
-                foreach (HoneyBadgerResultDTO result in HoneyBadgerAlgorithm.Generator((int)population, (int)iterations, 0.5, 0.5, executor))
-                {
-                    string jsonString = JsonSerializer.Serialize(result);
-                    string data = $"data: {jsonString}\r\r";
-                    byte[] dataBytes = Encoding.UTF8.GetBytes(data);
-                    await output.WriteAsync(dataBytes);
-                    await output.FlushAsync();
-                }
-                string finalData = $"data: END-OF-STREAM\r\r";
-                byte[] finalDataBytes = Encoding.UTF8.GetBytes(finalData);
-                await output.WriteAsync(finalDataBytes);
-                await output.FlushAsync();
+                var generator = HoneyBadgerAlgorithm.Generator((int)population, (int)iterations, 0.5, 0.5, executor);
+                Debounced(generator, (HoneyBadgerResultDTO result) => PushAsJSON(output, result));
+                PushAsJSON(output, "END-OF-STREAM");
+                output.Close();
             }
         }
 

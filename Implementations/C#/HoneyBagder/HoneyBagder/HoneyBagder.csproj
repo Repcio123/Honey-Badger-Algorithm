@@ -13,9 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="tempFront\index.html">
+    <Content Include="tempFront\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="tempFront\nestedTest\" />
   </ItemGroup>
 
 </Project>

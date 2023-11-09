@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace AlgorithmsWebApplication.Controllers
 {
@@ -49,6 +50,22 @@ namespace AlgorithmsWebApplication.Controllers
                 return Redirect("/static/tempFront.html");
             }
             return BadRequest();
+        }
+        [Route("/home/params")]
+        [HttpGet]
+        public async Task<IActionResult> Postg([FromQuery] string algorithmFileName)
+        {
+            string pathToAssembly = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algorithmFileName);
+            var alc = new AssemblyLoadContext("g", true);
+            Assembly assembly = alc.LoadFromAssemblyPath(pathToAssembly);
+
+            Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
+
+            alc.Unload();
+            
+            object? instance = Activator.CreateInstance(type);
+            var paramsInfo = type.GetProperty("ParamsInfo")?.GetValue(instance);
+            return Ok(new { paramsInfo });
         }
         [Route("/home/fun")]
         [HttpPost]

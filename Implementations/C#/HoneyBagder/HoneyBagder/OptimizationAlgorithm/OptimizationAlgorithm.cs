@@ -17,22 +17,29 @@ namespace HoneyBagder.OptimizationAlgorithm
 {
     public class OptimizationAlgorithm : IOptimizationAlgorithm
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = "Honey badger algorithm";
         public ParamInfo[] ParamsInfo { get; set; } =
         {
             new ParamInfo
             {
-                LowerBoundary = 2,
-                UpperBoundary = 6,
-                Description = "dd",
-                Name = "jd",
+                LowerBoundary = 0.1,
+                UpperBoundary = 4,
+                Description = "This is a description",
+                Name = "someOtherWeirdShit",
             },
             new ParamInfo
             {
-                Description = "dd",
-                LowerBoundary = 2,
+                Description = "This is a description",
+                LowerBoundary = 0.1,
                 UpperBoundary = 6,
-                Name = "jd",
+                Name = "ihabenowillto",
+            },
+            new ParamInfo
+            {
+                Description = "This is a description",
+                LowerBoundary = 0.1,
+                UpperBoundary = 6,
+                Name = "nameThisUselessthing",
             }
         };
         public IStateWriter Writer { get; set; } = new DefautlStateWriter();

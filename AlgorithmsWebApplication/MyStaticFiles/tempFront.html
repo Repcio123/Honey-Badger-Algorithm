@@ -2,7 +2,9 @@
 <document>
     <head>
         <meta charset="UTF-8">
-        <script>
+        <script type="module">
+            import { html, render } from 'https://esm.sh/htm/preact/standalone'
+
             let resultPanel;
             let mainForm;
             function getAvailableAlgorithms() {
@@ -10,6 +12,7 @@
                 const funSelect = document.querySelector("#funSelect");
                 fetch("/home").then((response) => response.json()).then((data) => {
                     algorithmSelect.innerHTML = ""
+                    algorithmSelect.appendChild(document.createElement("option"))
                     for (let fileName of data) {
                         let element = document.createElement("option");
                         element.innerHTML = fileName;
@@ -18,7 +21,8 @@
                     }
                 });
                 fetch("/home/fun").then((response) => response.json()).then((data) => {
-                  funSelect.innerHTML = ""
+                    funSelect.innerHTML = ""
+                    funSelect.appendChild(document.createElement("option"))
                     for (let fileName of data) {
                         let element = document.createElement("option");
                         element.innerHTML = fileName;
@@ -27,10 +31,56 @@
                     }
                 })
             }
+
+            function Parameter (props) {
+                return html`
+                    <div style="outline: 1px solid black">
+                        <label>Intrinsic parameter ${props.name}:</label>
+                        <div> upper: 
+                            <input name=${`${props.name}-upperBound`} value=${props.upperBound} type="number" />
+                        </div>
+                        <div> lower: 
+                            <input name=${`${props.name}-lowerBound`} value=${props.lowerBound} type="number" />
+                        </div>
+                        <div> step: 
+                            <input name=${`${props.name}-step`} value=${0} type="number" />
+                        </div>
+                    </div>
+                `;
+            }
+
+            function getAlgorithmParameters() {
+                const algorithmName = document.querySelector("#algorithmSelect").value;
+                const paramsSection = document.querySelector("#paramsSection");
+                paramsSection.innerHTML = "";
+                if (!algorithmName) {
+                    return
+                }
+                fetch(`/home/params?algorithmFileName=${algorithmName}`).then((response) => response.json()).then(data => {
+                    const paramsInfo = data.paramsInfo;
+
+
+
+                    render(
+                        html`
+                            <div style="outline: 1px solid black">
+                                ${paramsInfo.map((param) => (
+                                    html`<${Parameter} name=${param.name} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
+                                ))}    
+                            </div>
+                        `,
+                        paramsSection
+                    )
+
+
+                })
+            }
             function init() {
+                const algorithmSelect = document.querySelector("#algorithmSelect");
                 mainForm = document.getElementById('main-form')
                 resultPanel = document.querySelector("#resultPanel")
                 getAvailableAlgorithms();
+                algorithmSelect.onchange = getAlgorithmParameters
             }
             window.onload = init;
         </script>
@@ -65,11 +115,16 @@
           <h1>Run alg</h1>
             <div>
               <label for="algorithmSelect">Select algorithm</label>
-              <select id="algorithmSelect" name="algName"></select>
+              <select id="algorithmSelect" name="algName">
+                <option name="null" value=""></option>
+              </select>
+              <div id="paramsSection"></div>
             </div>
             <div>
               <label for="funSelect">Select fitness function</label>
-              <select id="funSelect" name="funName"></select>
+              <select onselect="getAlgorithmParameters(this)" id="funSelect" name="funName">
+                <option name="null" value=""></option>
+              </select>
             </div>
             <button id="submit" type="submit">Submit</button>
         </div>

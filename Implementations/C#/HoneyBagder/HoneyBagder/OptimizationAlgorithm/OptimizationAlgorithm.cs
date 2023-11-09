@@ -1,24 +1,66 @@
 ﻿using HoneyBadger;
-using static HoneyBadger.VectorEquations;
+using HoneyBagder.DTO;
+using HoneyBagder.GeneratePDFReport;
+using HoneyBagder.GenerateTextReport;
+using HoneyBagder.MiscInterfaces;
+using HoneyBagder.PDFReportGenerator;
+using HoneyBagder.StateReader;
+using HoneyBagder.StateWriter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HoneyBagder.DTO;
+using static HoneyBadger.VectorEquations;
 
-namespace HoneyBagder
+namespace HoneyBagder.OptimizationAlgorithm
 {
-    internal class HoneyBadgerAlgorithm
+    public class OptimizationAlgorithm : IOptimizationAlgorithm
     {
-        private static readonly double Epsilon = Math.Pow(2, -52); // smallest possible number in C#
-        static private double[][] SetUpPosition(
-            int population,
-            System.Tuple<double, double>[] domain
-        )
+        public string Name { get; set; }
+        public ParamInfo[] ParamsInfo { get; set; } =
         {
-            double[][] x = new double[population][];
-            var rand = new Random();
+            new ParamInfo
+            {
+                LowerBoundary = 2,
+                UpperBoundary = 6,
+                Description = "dd",
+                Name = "jd",
+            },
+            new ParamInfo
+            {
+                Description = "dd",
+                LowerBoundary = 2,
+                UpperBoundary = 6,
+                Name = "jd",
+            }
+        };
+        public IStateWriter Writer { get; set; } = new DefautlStateWriter();
+        public IStateReader Reader { get; set; } = new DefaultStateReader();
+        public IGenerateTextReport StringReportGenerator { get; set; } = new DefaultTextReportGenerator();
+        public IGeneratePDFReport PdfReportGenerator { get; set; } = new DefaultReportGenerator();
+        public double[] XBest { get; set; }
+        public double FBest { get; set; }
+        public int NumberOfEvaluationFitnessFunction { get; set; }
+        private static readonly double Epsilon = Math.Pow(2, -52); // smallest possible number in C#
+
+        public int population = 20, iterations = 20;
+
+        public void Solve(
+                fitnessFunction f,
+                Tuple<double, double>[] domain,
+                params double[] parameters
+            )
+        {
+            if (parameters.Length != ParamsInfo.Length)
+            {
+                throw new Exception("Parameter count");
+            }
+            double b = parameters[0];
+            double c = parameters[1];
+
+            double[][] positions = new double[population][];
+            var random = new Random();
 
             for (int i = 0; i < population; i++)
             {
@@ -26,25 +68,12 @@ namespace HoneyBagder
                 for (int j = 0; j < domain.Length; j++)
                 {
                     (double lowerBound, double upperBound) = domain[j];
-                    k[j] = lowerBound + rand.NextDouble() * (upperBound - lowerBound);
+                    k[j] = lowerBound + random.NextDouble() * (upperBound - lowerBound);
                 }
-                x[i] = (double[])k.Clone()!;
+                positions[i] = (double[])k.Clone()!;
             }
-            return x;
-        }
 
-        static public IEnumerable<HoneyBadgerResultDTO> Generator(
-                    int population,
-                    int iterations,
-                    double c,
-                    double b,
-                    ObjectiveFunction fn
-            )
-        {
-            var random = new Random();
-            var positions = SetUpPosition(population, fn.Domain);
-
-            var population_futness_values = Enumerable.Range(0, population).Select(i => fn.Executor(positions[i])).ToArray();
+            var population_futness_values = Enumerable.Range(0, population).Select(i => f(positions[i])).ToArray();
             int best_row_idx = 0;
             for (int i = 1; i < population; i++)
             {
@@ -130,7 +159,7 @@ namespace HoneyBagder
                     {
                         new_position = Add(positions[best_row_idx], ScalarMultiply(positions[best_row_idx], flag * random.NextDouble() * a));
                     }
-                    double new_prey_value = fn.Executor(new_position);
+                    double new_prey_value = f(new_position);
 
                     if (new_prey_value < population_futness_values[population_index])
                     {
@@ -142,28 +171,15 @@ namespace HoneyBagder
                         {
                             best_fitness_value = new_prey_value;
                             best_row_idx = population_index;
-                            yield return new HoneyBadgerResultDTO
-                            {
-                                value = best_fitness_value,
-                                parameters = positions[best_row_idx],
-                            };
                         }
                     }
                 }
             }
 
-            yield break;
-        }
 
-        static public HoneyBadgerResultDTO Run(
-                    int population,
-                    int iterations,
-                    double c,
-                    double b,
-                    ObjectiveFunction fn
-            )
-        {
-            return Generator(population, iterations, c, b, fn).Last();
+
+            XBest = positions[best_row_idx];
+            FBest = best_fitness_value;
         }
     }
 }

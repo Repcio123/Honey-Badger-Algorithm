@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<document>
+    <head>
+        <meta charset="UTF-8">
+        <script>
+            let resultPanel;
+            let mainForm;
+            function getAvailableAlgorithms() {
+                const algorithmSelect = document.querySelector("#algorithmSelect");
+                const funSelect = document.querySelector("#funSelect");
+                fetch("/home").then((response) => response.json()).then((data) => {
+                    algorithmSelect.innerHTML = ""
+                    for (let fileName of data) {
+                        let element = document.createElement("option");
+                        element.innerHTML = fileName;
+                        element.value = fileName;
+                        algorithmSelect.append(element)
+                    }
+                });
+                fetch("/home/fun").then((response) => response.json()).then((data) => {
+                  funSelect.innerHTML = ""
+                    for (let fileName of data) {
+                        let element = document.createElement("option");
+                        element.innerHTML = fileName;
+                        element.value = fileName;
+                        funSelect.append(element)
+                    }
+                })
+            }
+            function init() {
+                mainForm = document.getElementById('main-form')
+                resultPanel = document.querySelector("#resultPanel")
+                getAvailableAlgorithms();
+            }
+            window.onload = init;
+        </script>
+    </head>
+    <body>
+        <div>
+            <h1>Upload algorithm</h1>
+            <form method="post" action="/home" id="alg-form" enctype="multipart/form-data">
+                <div>
+                    <label for="dllFile">Algorithm Dll file</label>
+                    <input type="file" name="dllFile"></input>
+                </div>
+                <div>
+                    <button id="submit" type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+        <div>
+          <h1>Upload test function</h1>
+          <form method="post" action="/home/fun" id="fun-form" enctype="multipart/form-data">
+              <div>
+                  <label for="dllFile">Function Dll file</label>
+                  <input type="file" name="dllFile"></input>
+              </div>
+              <div>
+                  <button id="submit" type="submit">Submit</button>
+              </div>
+          </form>
+        </div>
+        <hr />
+        <form method="post" action="/home/run" id="main-form">
+          <h1>Run alg</h1>
+            <div>
+              <label for="algorithmSelect">Select algorithm</label>
+              <select id="algorithmSelect" name="algName"></select>
+            </div>
+            <div>
+              <label for="funSelect">Select fitness function</label>
+              <select id="funSelect" name="funName"></select>
+            </div>
+            <button id="submit" type="submit">Submit</button>
+        </div>
+    </body>
+</document>

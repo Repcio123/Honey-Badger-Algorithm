@@ -69,42 +69,18 @@ namespace HoneyBagder.WebServer
 
         static async void RunAlgorithm(HttpListenerContext ctx)
         {
-            Tuple<double, double>[] domain = { Tuple.Create(-4.5, 4.5), Tuple.Create(-4.5, 4.5) };
-            Func<double[], double> bealeFunction = (double[] parameters) => {
-                double x = parameters[0];
-                double y = parameters[1];
-                return Math.Pow(1.5 - x + x * y, 2) + Math.Pow(2.25 - x + x * y * y, 2) + Math.Pow(2.625 - x + x * y * y * y, 2);
-            };
-            ObjectiveFunction executor = new(domain, bealeFunction);
-
             using HttpListenerResponse resp = ctx.Response;
+            resp.Headers.Set("Content-Type", "text/json");
 
+            using Stream ros = resp.OutputStream;
 
-            resp.Headers.Set("Cache-Control", "no-store");
-            resp.Headers.Set("Content-Type", "text/event-stream");
-            resp.Headers.Add("Connection", "keep-alive");
+            ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            string err = "404 - not found";
 
+            byte[] ebuf = Encoding.UTF8.GetBytes(err);
+            resp.ContentLength64 = ebuf.Length;
 
-            var query = ctx.Request.QueryString;
-            int? population = ToNullableInt(query.Get("population"));
-            if (population == null)
-            {
-                return;
-            }
-
-            int? iterations = ToNullableInt(query.Get("iterations"));
-            if (iterations == null)
-            {
-                return;
-            }
-
-            using (Stream output = resp.OutputStream)
-            {
-                var generator = HoneyBadgerAlgorithm.Generator((int)population, (int)iterations, 0.5, 0.5, executor);
-                Debounced(generator, (HoneyBadgerResultDTO result) => PushAsJSON(output, result));
-                PushAsJSON(output, "END-OF-STREAM");
-                output.Close();
-            }
+            ros.Write(ebuf, 0, ebuf.Length);
         }
 
         static void NotFound(HttpListenerContext ctx)

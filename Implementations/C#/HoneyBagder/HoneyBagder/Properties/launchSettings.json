@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "HoneyBagder": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:51944;http://localhost:51945"
+    }
+  }
+}

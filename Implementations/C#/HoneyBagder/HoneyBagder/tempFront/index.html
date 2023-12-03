@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<document>
+    <head>
+        <meta charset="UTF-8">
+        <script>
+            let resultPanel;
+            let mainForm;
+            function replaceResultPanelContent(data) {
+
+              resultPanel.innerHTML = `
+                Najlepszy rezultat: ${data.value}
+                Osiągnięty dla parametrów: ${data.parameters.join(", ")}
+              `
+            }
+            function start(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const form = new FormData(mainForm);
+                const evtSource = new EventSource(`/run?population=${form.get('population')}&iterations=${form.get('iterations')}`);
+
+                evtSource.onmessage = (event) => {
+                    if ('"END-OF-STREAM"' == event.data) {
+                        return evtSource.close();
+                    }
+                    replaceResultPanelContent(JSON.parse(event.data))
+
+
+                };
+                evtSource.onerror = (err) => {
+                    console.error("EventSource failed:", err);
+                };
+            }
+            function init() {
+                mainForm = document.getElementById('main-form')
+                resultPanel = document.querySelector("#resultPanel")
+                mainForm.onsubmit = start;
+            }
+            window.onload = init;
+        </script>
+    </head>
+    <body>
+        gadacas
+        <div>
+          <form id="main-form" onsubmit="start(); return false">
+            <div>
+              <label for="population">Populacja</label>
+              <input name="population" id="population"></input>
+            </div>
+            <div>
+              <label for="iterations">Iteracje</label>
+              <input name="iterations" id="iterations"></input>
+            </div>
+            <div>
+              <button id="submit" type="submit">run</button>
+            </div>
+          </form>
+        </div>
+        <div id="resultPanel">
+
+
+        </div>
+    </body>
+</document>

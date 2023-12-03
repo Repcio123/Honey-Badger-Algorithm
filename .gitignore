@@ -1,3 +1,5 @@
 **/.vs/
 **/obj/
 **/bin/
+AlgorithmsWebApplication/functions/*
+AlgorithmsWebApplication/algorithms/*

@@ -1,10 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="tempFront\index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="tempFront\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="tempFront\nestedTest\" />
+  </ItemGroup>
 
 </Project>

@@ -111,15 +111,14 @@ namespace AlgorithmsWebApplication.Controllers
 
             Tuple<double, double>[] testDomain = {
                 Tuple.Create<double, double>(0, 5),
-                Tuple.Create<double, double>(0, 5),
+                Tuple.Create<double, double>(0, 5)
             };
 
             object? invokerInstance = Activator.CreateInstance(typeWithFitnessFunction);
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
-
             object? instance = Activator.CreateInstance(type);
-            type.GetMethod("Solve")?.Invoke(instance, new object[] {
+            type.GetMethod("Solve")?.Invoke(instance, new object[]{
                 delgt,
                 testDomain,
                 new double[] { 0.5, 1 }

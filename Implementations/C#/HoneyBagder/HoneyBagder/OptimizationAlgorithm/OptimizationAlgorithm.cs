@@ -22,7 +22,7 @@ namespace HoneyBagder.OptimizationAlgorithm
         {
             new ParamInfo
             {
-                LowerBoundary = 0.1,
+                LowerBoundary = 1,
                 UpperBoundary = 4,
                 Description = "This is a description",
                 Name = "someOtherWeirdShit",
@@ -30,16 +30,9 @@ namespace HoneyBagder.OptimizationAlgorithm
             new ParamInfo
             {
                 Description = "This is a description",
-                LowerBoundary = 0.1,
+                LowerBoundary = 1,
                 UpperBoundary = 6,
                 Name = "ihabenowillto",
-            },
-            new ParamInfo
-            {
-                Description = "This is a description",
-                LowerBoundary = 0.1,
-                UpperBoundary = 6,
-                Name = "nameThisUselessthing",
             }
         };
         public IStateWriter Writer { get; set; } = new DefautlStateWriter();

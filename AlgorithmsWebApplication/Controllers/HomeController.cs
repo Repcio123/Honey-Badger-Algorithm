@@ -17,6 +17,7 @@ namespace AlgorithmsWebApplication.Controllers
             _hostingEnvironment = hostEnvironment;
         }
 
+        [Route("/home/alg")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -83,13 +84,6 @@ namespace AlgorithmsWebApplication.Controllers
                 return Redirect("/static/tempFront.html");
             }
             return BadRequest();
-        }
-        public class ParamInfo
-        {
-            public string Name { get; set; } = null!;
-            public string Description { get; set; } = null!;
-            public double UpperBoundary { get; set; }
-            public double LowerBoundary { get; set; }
         }
 
         //public delegate double fitnessFunction(double[] args);

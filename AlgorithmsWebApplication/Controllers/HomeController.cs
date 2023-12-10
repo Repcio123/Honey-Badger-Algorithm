@@ -17,7 +17,6 @@ namespace AlgorithmsWebApplication.Controllers
             _hostingEnvironment = hostEnvironment;
         }
 
-        [Route("/home/alg")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -35,7 +34,7 @@ namespace AlgorithmsWebApplication.Controllers
             FileInfo[] files = di.GetFiles();
             return Ok(files.Select(file => file.Name));
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> Post()
         {

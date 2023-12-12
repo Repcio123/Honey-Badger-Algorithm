@@ -9,7 +9,9 @@
             let mainForm;
             function getAvailableAlgorithms() {
                 const algorithmSelect = document.querySelector("#algorithmSelect");
+                const algorithmMulSelect = document.querySelector("#algorithmMulSelect");
                 const funSelect = document.querySelector("#funSelect");
+                const funMulSelect = document.querySelector("#funMulSelect");
                 fetch("/home").then((response) => response.json()).then((data) => {
                     algorithmSelect.innerHTML = ""
                     algorithmSelect.appendChild(document.createElement("option"))
@@ -17,7 +19,15 @@
                         let element = document.createElement("option");
                         element.innerHTML = fileName;
                         element.value = fileName;
-                        algorithmSelect.append(element)
+                        algorithmSelect.append(element);
+                    }
+                    algorithmMulSelect.innerHTML = ""
+                    algorithmMulSelect.appendChild(document.createElement("option"))
+                    for (let fileName of data) {
+                        let element = document.createElement("option");
+                        element.innerHTML = fileName;
+                        element.value = fileName;
+                        algorithmMulSelect.append(element);
                     }
                 });
                 fetch("/home/fun").then((response) => response.json()).then((data) => {
@@ -27,7 +37,15 @@
                         let element = document.createElement("option");
                         element.innerHTML = fileName;
                         element.value = fileName;
-                        funSelect.append(element)
+                        funSelect.append(element);
+                    }
+                    funMulSelect.innerHTML = ""
+                    funMulSelect.appendChild(document.createElement("option"))
+                    for (let fileName of data) {
+                        let element = document.createElement("option");
+                        element.innerHTML = fileName;
+                        element.value = fileName;
+                        funMulSelect.append(element);
                     }
                 })
             }
@@ -99,34 +117,51 @@
             </form>
         </div>
         <div>
-          <h1>Upload test function</h1>
-          <form method="post" action="/home/fun" id="fun-form" enctype="multipart/form-data">
-              <div>
-                  <label for="dllFile">Function Dll file</label>
-                  <input type="file" name="dllFile"></input>
-              </div>
-              <div>
-                  <button id="submit" type="submit">Submit</button>
-              </div>
-          </form>
+            <h1>Upload test function</h1>
+            <form method="post" action="/home/fun" id="fun-form" enctype="multipart/form-data">
+                <div>
+                    <label for="dllFile">Function Dll file</label>
+                    <input type="file" name="dllFile"></input>
+                </div>
+                <div>
+                    <button id="submit" type="submit">Submit</button>
+                </div>
+            </form>
         </div>
         <hr />
         <form method="post" action="/home/run" id="main-form">
-          <h1>Run alg</h1>
+            <h1>Run alg</h1>
             <div>
-              <label for="algorithmSelect">Select algorithm</label>
-              <select id="algorithmSelect" name="algName">
-                <option name="null" value=""></option>
-              </select>
-              <div id="paramsSection"></div>
+                <label for="algorithmSelect">Select algorithm</label>
+                <select id="algorithmSelect" name="algName">
+                    <option name="null" value=""></option>
+                </select>
+                <div id="paramsSection"></div>
             </div>
             <div>
-              <label for="funSelect">Select fitness function</label>
-              <select onselect="getAlgorithmParameters(this)" id="funSelect" name="funName">
-                <option name="null" value=""></option>
-              </select>
+                <label for="funSelect">Select fitness function</label>
+                <select onselect="getAlgorithmParameters(this)" id="funSelect" name="funName">
+                    <option name="null" value=""></option>
+                </select>
             </div>
             <button id="submit" type="submit">Submit</button>
-        </div>
+        </form>
+
+        <form method="post" action="/home/runs" id="sec-form">
+            <h1>Run multiple algXfun</h1>
+            <div>
+                <label for="algorithmMulSelect">Select algorithm</label>
+                <select id="algorithmMulSelect" multiple name="algNames">
+                    <option name="null" value=""></option>
+                </select>
+            </div>
+            <div>
+                <label for="funMulSelect">Select fitness function</label>
+                <select id="funMulSelect" multiple name="funNames">
+                    <option name="null" value=""></option>
+                </select>
+            </div>
+            <button id="submit2" type="submit">Submit</button>
+        </form>
     </body>
 </document>

@@ -120,5 +120,24 @@ namespace AlgorithmsWebApplication.Controllers
             var fBest = type.GetProperty("FBest")?.GetValue(instance);
             return Ok(new { xBest, fBest });
         }
+        [Route("/home/runs")]
+        [HttpPost]
+        public async Task<IActionResult> RunM([FromForm] List<string> algNames, [FromForm] List<string> funNames)
+        {
+            object?[] tmp = new object[algNames.Count + funNames.Count];
+            int i = 0;
+            foreach (string alg in algNames) 
+            {
+                foreach (string fun in funNames)
+                {
+                    var result = await Run(alg, fun);
+                    var cast = result as OkObjectResult;
+                    var val = cast.Value;
+                    tmp[i] = val;
+                    i++;
+                }
+            }
+            return Ok(new { tmp });
+        }
     }
 }

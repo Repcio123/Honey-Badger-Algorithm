@@ -34,7 +34,7 @@ namespace AlgorithmsWebApplication.Controllers
             FileInfo[] files = di.GetFiles();
             return Ok(files.Select(file => file.Name));
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> Post()
         {
@@ -84,13 +84,6 @@ namespace AlgorithmsWebApplication.Controllers
             }
             return BadRequest();
         }
-        public class ParamInfo
-        {
-            public string Name { get; set; } = null!;
-            public string Description { get; set; } = null!;
-            public double UpperBoundary { get; set; }
-            public double LowerBoundary { get; set; }
-        }
 
         //public delegate double fitnessFunction(double[] args);
 
@@ -111,15 +104,14 @@ namespace AlgorithmsWebApplication.Controllers
 
             Tuple<double, double>[] testDomain = {
                 Tuple.Create<double, double>(0, 5),
-                Tuple.Create<double, double>(0, 5),
+                Tuple.Create<double, double>(0, 5)
             };
 
             object? invokerInstance = Activator.CreateInstance(typeWithFitnessFunction);
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
-
             object? instance = Activator.CreateInstance(type);
-            type.GetMethod("Solve")?.Invoke(instance, new object[] {
+            type.GetMethod("Solve")?.Invoke(instance, new object[]{
                 delgt,
                 testDomain,
                 new double[] { 0.5, 1 }
@@ -127,6 +119,25 @@ namespace AlgorithmsWebApplication.Controllers
             var xBest = type.GetProperty("XBest")?.GetValue(instance);
             var fBest = type.GetProperty("FBest")?.GetValue(instance);
             return Ok(new { xBest, fBest });
+        }
+        [Route("/home/runs")]
+        [HttpPost]
+        public async Task<IActionResult> RunM([FromForm] List<string> algNames, [FromForm] List<string> funNames)
+        {
+            object?[] tmp = new object[algNames.Count + funNames.Count];
+            int i = 0;
+            foreach (string alg in algNames) 
+            {
+                foreach (string fun in funNames)
+                {
+                    var result = await Run(alg, fun);
+                    var cast = result as OkObjectResult;
+                    var val = cast.Value;
+                    tmp[i] = val;
+                    i++;
+                }
+            }
+            return Ok(new { tmp });
         }
     }
 }

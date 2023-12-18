@@ -124,7 +124,7 @@ namespace AlgorithmsWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> RunM([FromForm] List<string> algNames, [FromForm] List<string> funNames)
         {
-            object?[] tmp = new object[algNames.Count + funNames.Count];
+            object?[] tmp = new object[algNames.Count * funNames.Count];
             int i = 0;
             foreach (string alg in algNames) 
             {

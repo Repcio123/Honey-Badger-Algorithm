@@ -173,6 +173,9 @@ namespace HoneyBagder.OptimizationAlgorithm
                             best_row_idx = population_index;
                         }
                     }
+
+                    Writer = new DefautlStateWriter(i, positions, population_futness_values);
+                    Writer.SaveToFileStateOfAlgorithm("essa");
                 }
             }
 

@@ -25,8 +25,8 @@ namespace HoneyBagder.StateWriter
         }
         public void SaveToFileStateOfAlgorithm(string path)
         {
-            Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory+" "+path);
-            using (StreamWriter outputFile = new StreamWriter(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "state.txt")))
+            Console.WriteLine(path);
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(path, "state.txt")))
             {
                 outputFile.WriteLine(Iterator);
                 for (int i = 0; i < Population.Length; i++)

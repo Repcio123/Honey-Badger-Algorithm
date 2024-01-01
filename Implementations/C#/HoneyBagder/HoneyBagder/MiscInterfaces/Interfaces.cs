@@ -19,14 +19,14 @@ namespace HoneyBagder.MiscInterfaces
 
     public interface IObserver
     {
-        void Update(ISubject subject);
+        public void Update(ISubject subject);
     }
 
     public interface ISubject
     {
-        void Attach(IObserver observer);
-        void Detach(IObserver observer);
-        void Notify();
+        public void Attach(IObserver observer);
+        public void Detach(IObserver observer);
+        public void Notify();
     }
 
     //double bealeFunction (double[] parameters) {

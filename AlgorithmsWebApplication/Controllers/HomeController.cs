@@ -1,3 +1,4 @@
+using HoneyBagder.MiscInterfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -91,6 +92,7 @@ namespace AlgorithmsWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> Run([FromForm] string algName, [FromForm] string funName)
         {
+            WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
             Assembly assembly = Assembly.LoadFrom(dll);
 
@@ -111,10 +113,18 @@ namespace AlgorithmsWebApplication.Controllers
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
             object? instance = Activator.CreateInstance(type);
+            type.GetMethod("Attach").Invoke(instance, new object[]
+            {
+                writerObserver
+            });
             type.GetMethod("Solve")?.Invoke(instance, new object[]{
                 delgt,
                 testDomain,
                 new double[] { 0.5, 1 }
+            });
+            type.GetMethod("Detach").Invoke(instance, new object[]
+            {
+                writerObserver
             });
             var xBest = type.GetProperty("XBest")?.GetValue(instance);
             var fBest = type.GetProperty("FBest")?.GetValue(instance);

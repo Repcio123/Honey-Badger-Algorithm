@@ -15,7 +15,7 @@ using static HoneyBadger.VectorEquations;
 
 namespace HoneyBagder.OptimizationAlgorithm
 {
-    public class OptimizationAlgorithm : IOptimizationAlgorithm
+    public class OptimizationAlgorithm : IOptimizationAlgorithm, ISubject
     {
         public string Name { get; set; } = "Honey badger algorithm";
         public ParamInfo[] ParamsInfo { get; set; } =
@@ -175,7 +175,7 @@ namespace HoneyBagder.OptimizationAlgorithm
                     }
 
                     Writer = new DefautlStateWriter(i, positions, population_futness_values);
-                    Writer.SaveToFileStateOfAlgorithm("essa");
+                    Notify();
                 }
             }
 
@@ -183,6 +183,23 @@ namespace HoneyBagder.OptimizationAlgorithm
 
             XBest = positions[best_row_idx];
             FBest = best_fitness_value;
+        }
+
+        private List<IObserver> _observers = new List<IObserver>();
+        public void Attach(IObserver observer) 
+        {
+            _observers.Add(observer);
+        }
+        public void Detach(IObserver observer)
+        {
+            _observers.Remove(observer);
+        }
+        public void Notify()
+        {
+            foreach (var observer in _observers)
+            {
+                observer.Update(this);
+            }
         }
     }
 }

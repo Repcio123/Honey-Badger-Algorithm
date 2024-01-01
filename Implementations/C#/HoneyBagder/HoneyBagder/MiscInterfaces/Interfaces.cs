@@ -17,6 +17,18 @@ namespace HoneyBagder.MiscInterfaces
         public double LowerBoundary { get; set; }
     }
 
+    public interface IObserver
+    {
+        void Update(ISubject subject);
+    }
+
+    public interface ISubject
+    {
+        void Attach(IObserver observer);
+        void Detach(IObserver observer);
+        void Notify();
+    }
+
     //double bealeFunction (double[] parameters) {
     //    double x = parameters[0];
     //    double y = parameters[1];

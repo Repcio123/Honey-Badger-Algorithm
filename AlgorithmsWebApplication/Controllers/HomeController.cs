@@ -1,4 +1,5 @@
 using HoneyBagder.MiscInterfaces;
+using HoneyBagder.StateReader;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -126,6 +127,10 @@ namespace AlgorithmsWebApplication.Controllers
             {
                 writerObserver
             });
+            var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] 
+            {
+            });
+            (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
             var xBest = type.GetProperty("XBest")?.GetValue(instance);
             var fBest = type.GetProperty("FBest")?.GetValue(instance);
             return Ok(new { xBest, fBest });

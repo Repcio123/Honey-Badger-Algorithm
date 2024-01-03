@@ -29,14 +29,14 @@ namespace HoneyBagder.StateWriter
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(path, "state.txt")))
             {
                 outputFile.WriteLine(Iterator);
-                outputFile.WriteLine(Population.Length + ' ' + Population[0].Length);
+                outputFile.WriteLine(Population.Length + " " + Population[0].Length);
                 for (int i = 0; i < Population.Length; i++)
                 {
                     for (int j = 0; j < Population[i].Length; j++)
                     {
-                        outputFile.Write(Population[i][j] + ' ');
+                        outputFile.Write(Population[i][j] + " ");
                     }
-                    outputFile.Write(" : " + Fitness[i] +'\n');
+                    outputFile.Write(": " + Fitness[i] +'\n');
                 }
             }
         }

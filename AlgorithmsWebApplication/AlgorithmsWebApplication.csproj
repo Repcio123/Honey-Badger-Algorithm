@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Implementations\C#\HoneyBagder\testFitnessFunction\testFitnessFunction.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="itext7" Version="7.1.14" />
+  </ItemGroup>
+
 </Project>

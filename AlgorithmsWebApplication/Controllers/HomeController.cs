@@ -1,8 +1,10 @@
 using HoneyBagder.MiscInterfaces;
 using HoneyBagder.StateReader;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
@@ -102,6 +104,45 @@ namespace AlgorithmsWebApplication.Controllers
             string Name { get; set; }
         }
 
+        IEnumerable<double[]> incrementParameters(double[] startValues, double[] steps, double[] maxes)
+        {
+            double[] currentValues = new double[startValues.Length];
+            Array.Copy(startValues, currentValues, startValues.Length);
+
+            yield return currentValues;
+
+            while (true)
+            {
+                // Find first lower than max from the left
+                int i = 0;
+                for (; i < currentValues.Length; i++)
+                {
+                    if (currentValues[i] < maxes[i])
+                    {
+                        break;
+                    }
+                }
+
+                // If all parameters higher than max, break
+                if (i == currentValues.Length)
+                {
+                    break;
+                }
+
+                // else zero all the previous parameters
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    currentValues[j] = startValues[j];
+                }
+
+                // and increment the current one
+                currentValues[i] += steps[i];
+
+                // yield current parameters state
+                yield return currentValues;
+            }
+        }
+
         [Route("/home/run")]
         [HttpPost]
         public async Task<IActionResult> Run([FromForm] string algName, [FromForm] string funName)
@@ -123,18 +164,22 @@ namespace AlgorithmsWebApplication.Controllers
                 throw new Exception("Coœ jest nie tak z parametrami algorytmu");
             }
 
-            List<double> passedInitialParameters = new List<double> { };
+            Dictionary<string, Dictionary<string, double>> passedInitialParameters = new Dictionary<string, Dictionary<string, double>> { };
             foreach (string key in Request.Form.Keys)
             {
-                if (key.EndsWith("lowerBound"))
+                string[] keyIndices = key.Split('-');
+                if (keyIndices.Length == 2)
                 {
-                    passedInitialParameters.Add(Convert.ToDouble(Request.Form[key]));
+                    string parameterName = keyIndices[0];
+                    string parameterPropertyName = keyIndices[1];
+                    if (!passedInitialParameters.ContainsKey(parameterName))
+                    {
+                        passedInitialParameters.Add(parameterName, new Dictionary<string, double> { });
+                    }
+                    string parameterValueString = Request.Form[key];
+                    passedInitialParameters[parameterName].Add(parameterPropertyName, Convert.ToDouble(parameterValueString.Replace('.', ',')));
                 }
             }
-            //foreach (Parameter parameter in parameters)
-            //{
-            //    typeof(Parameter).GetProperty($"{parameter.Name}-lowerBound").GetValue(parameter);
-            //}
 
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
 
@@ -152,27 +197,32 @@ namespace AlgorithmsWebApplication.Controllers
             object? invokerInstance = Activator.CreateInstance(typeWithFitnessFunction);
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
-            object? instance = Activator.CreateInstance(type);
-            type.GetMethod("Attach").Invoke(instance, new object[]
-            {
-                writerObserver
-            });
-            type.GetMethod("Solve")?.Invoke(instance, new object[]{
-                delgt,
-                testDomain,
-                passedInitialParameters.ToArray()
-            });
-            type.GetMethod("Detach").Invoke(instance, new object[]
-            {
-                writerObserver
-            });
-            var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] 
-            {
-            });
-            (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
-            var xBest = type.GetProperty("XBest")?.GetValue(instance);
-            var fBest = type.GetProperty("FBest")?.GetValue(instance);
-            return Ok(new { xBest, fBest });
+
+            double[] parameterStartingValues = passedInitialParameters.Select((parameter) => parameter.Value["lowerBound"]).ToArray();
+            double[] parameterStepSisters= passedInitialParameters.Select((parameter) => parameter.Value["step"]).ToArray();
+            double[] parameterMaxValues = passedInitialParameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
+
+            object? xBestMax = null;
+            double fBestMax = double.PositiveInfinity;
+            double[] bestParameterValues = new double[parameterStartingValues.Length];
+            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepSisters, parameterMaxValues)) {
+                object? instance = Activator.CreateInstance(type);
+                type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
+                type.GetMethod("Solve")?.Invoke(instance, new object[]{ delgt, testDomain, parameterValues });
+                var xBest = type.GetProperty("XBest")?.GetValue(instance);
+                double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
+
+                if (Math.Abs(fBestMax) > Math.Abs(fBest))
+                {
+                    xBestMax = xBest;
+                    fBestMax = fBest;
+                    Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
+                }
+                type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
+                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] {});
+                (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
+            }
+            return Ok(new { xBestMax, fBestMax, bestParameterValues });
         }
 
         [Route("/home/runs")]

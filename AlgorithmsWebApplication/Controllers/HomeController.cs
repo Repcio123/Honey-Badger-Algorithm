@@ -1,8 +1,11 @@
 using HoneyBagder.MiscInterfaces;
 using HoneyBagder.StateReader;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Security.Cryptography;
 
 namespace AlgorithmsWebApplication.Controllers
 {
@@ -53,9 +56,8 @@ namespace AlgorithmsWebApplication.Controllers
             }
             return BadRequest();
         }
-        [Route("/home/params")]
-        [HttpGet]
-        public async Task<IActionResult> Postg([FromQuery] string algorithmFileName)
+
+        object? getParameters(string algorithmFileName)
         {
             string pathToAssembly = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algorithmFileName);
             var alc = new AssemblyLoadContext("g", true);
@@ -64,9 +66,17 @@ namespace AlgorithmsWebApplication.Controllers
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
 
             alc.Unload();
-            
+
             object? instance = Activator.CreateInstance(type);
             var paramsInfo = type.GetProperty("ParamsInfo")?.GetValue(instance);
+            return paramsInfo;
+        }
+
+        [Route("/home/params")]
+        [HttpGet]
+        public async Task<IActionResult> Postg([FromQuery] string algorithmFileName)
+        {
+            var paramsInfo = getParameters(algorithmFileName);
             return Ok(new { paramsInfo });
         }
         [Route("/home/fun")]
@@ -87,7 +97,10 @@ namespace AlgorithmsWebApplication.Controllers
             return BadRequest();
         }
 
-        //public delegate double fitnessFunction(double[] args);
+        public interface Parameter
+        {
+            string Name { get; set; }
+        }
 
         [Route("/home/run")]
         [HttpPost]
@@ -96,6 +109,32 @@ namespace AlgorithmsWebApplication.Controllers
             WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
             Assembly assembly = Assembly.LoadFrom(dll);
+            IEnumerable parameters = getParameters(algName) as IEnumerable;
+            //First parameter-upperBound: 4
+            //First parameter-lowerBound: 1
+            //First parameter-step: 0
+            //ihabenowillto - upperBound: 6
+            //ihabenowillto - lowerBound: 1
+            //ihabenowillto - step: 0
+            //Third - upperBound: 6
+            //Third - lowerBound: 1
+            if (parameters == null)
+            {
+                throw new Exception("Coœ jest nie tak z parametrami algorytmu");
+            }
+
+            List<double> passedInitialParameters = new List<double> { };
+            foreach (string key in Request.Form.Keys)
+            {
+                if (key.EndsWith("lowerBound"))
+                {
+                    passedInitialParameters.Add(Convert.ToDouble(Request.Form[key]));
+                }
+            }
+            //foreach (Parameter parameter in parameters)
+            //{
+            //    typeof(Parameter).GetProperty($"{parameter.Name}-lowerBound").GetValue(parameter);
+            //}
 
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
 
@@ -121,7 +160,7 @@ namespace AlgorithmsWebApplication.Controllers
             type.GetMethod("Solve")?.Invoke(instance, new object[]{
                 delgt,
                 testDomain,
-                new double[] { 0.5, 1 }
+                passedInitialParameters.ToArray()
             });
             type.GetMethod("Detach").Invoke(instance, new object[]
             {
@@ -135,6 +174,7 @@ namespace AlgorithmsWebApplication.Controllers
             var fBest = type.GetProperty("FBest")?.GetValue(instance);
             return Ok(new { xBest, fBest });
         }
+
         [Route("/home/runs")]
         [HttpPost]
         public async Task<IActionResult> RunM([FromForm] List<string> algNames, [FromForm] List<string> funNames)

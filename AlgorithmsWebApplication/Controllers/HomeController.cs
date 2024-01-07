@@ -240,11 +240,11 @@ namespace AlgorithmsWebApplication.Controllers
             }
             string xBestMaxString = string.Join(", ", (xBestMax as double[]));
 
-            string reportsFolder = Path.Combine(_hostingEnvironment.ContentRootPath, "reports");
+            string reportsFolder = Path.Combine(_hostingEnvironment.ContentRootPath, "raports");
             Directory.CreateDirectory(reportsFolder);
 
             // Create a unique PDF file name based on the current date and time
-            string pdfFileName = $"report_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm")}.pdf";
+            string pdfFileName = $"raport_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm")}.pdf";
 
             // Combine the folder and file paths
             string pdfFilePath = Path.Combine(reportsFolder, pdfFileName);

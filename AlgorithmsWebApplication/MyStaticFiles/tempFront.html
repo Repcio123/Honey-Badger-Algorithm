@@ -50,21 +50,21 @@
                 })
             }
 
-            function Parameter (props) {
+            function Parameter(props) {
                 return html`
-                    <div style="outline: 1px solid black">
-                        <label>Intrinsic parameter ${props.name}:</label>
-                        <div> upper: 
-                            <input name=${`${props.name}-upperBound`} value=${props.upperBound} type="number" />
-                        </div>
-                        <div> lower: 
-                            <input name=${`${props.name}-lowerBound`} value=${props.lowerBound} type="number" />
-                        </div>
-                        <div> step: 
-                            <input name=${`${props.name}-step`} value=${0} type="number" />
-                        </div>
-                    </div>
-                `;
+                            <div style="outline: 1px solid black">
+                                <label>Intrinsic parameter ${props.name}:</label>
+                                <div> upper:
+                                    <input name=${`${props.name}-upperBound`} value=${props.upperBound} type="number" step="any" />
+                                </div>
+                                <div> lower:
+                                    <input name=${`${props.name}-lowerBound`} value=${props.lowerBound} type="number" step="any" />
+                                </div>
+                                <div> step:
+                                    <input name=${`${props.name}-step`} value=${0.1} type="number" step="any" />
+                                </div>
+                            </div>
+                        `;
             }
 
             function getAlgorithmParameters() {
@@ -81,12 +81,12 @@
 
                     render(
                         html`
-                            <div style="outline: 1px solid black">
-                                ${paramsInfo.map((param) => (
-                                    html`<${Parameter} name=${param.name} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
-                                ))}    
-                            </div>
-                        `,
+                                    <div style="outline: 1px solid black">
+                                        ${paramsInfo.map((param) => (
+                            html`<${Parameter} name=${param.name} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
+                        ))}
+                                    </div>
+                                `,
                         paramsSection
                     )
 
@@ -104,6 +104,7 @@
         </script>
     </head>
     <body>
+        <link rel="stylesheet" type="text/css" href="tempStyle.css" />
         <div>
             <h1>Upload algorithm</h1>
             <form method="post" action="/home" id="alg-form" enctype="multipart/form-data">

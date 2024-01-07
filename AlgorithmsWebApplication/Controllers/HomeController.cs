@@ -278,6 +278,9 @@ namespace AlgorithmsWebApplication.Controllers
                         .SetTextAlignment(TextAlignment.LEFT)
                         .SetFontSize(16));
 
+                    document.Add(new Paragraph($"Function Calls: {fitnessFunctionCalls}")
+                        .SetBold().SetFontSize(14).SetMarginBottom(10));
+
                     // Dodaj informacje o XBest i FBest
                     document.Add(new Paragraph($"XBest: {xBestMaxString}")
                         .SetTextAlignment(TextAlignment.LEFT)

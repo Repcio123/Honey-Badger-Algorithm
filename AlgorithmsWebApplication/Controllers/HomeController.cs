@@ -143,43 +143,11 @@ namespace AlgorithmsWebApplication.Controllers
             }
         }
 
-        [Route("/home/run")]
-        [HttpPost]
-        public async Task<IActionResult> Run([FromForm] string algName, [FromForm] string funName)
+        public async Task<object> Run(string algName, string funName, Dictionary<string, Dictionary<string, double>> parameters)
         {
             WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
             Assembly assembly = Assembly.LoadFrom(dll);
-            IEnumerable parameters = getParameters(algName) as IEnumerable;
-            //First parameter-upperBound: 4
-            //First parameter-lowerBound: 1
-            //First parameter-step: 0
-            //ihabenowillto - upperBound: 6
-            //ihabenowillto - lowerBound: 1
-            //ihabenowillto - step: 0
-            //Third - upperBound: 6
-            //Third - lowerBound: 1
-            if (parameters == null)
-            {
-                throw new Exception("Coœ jest nie tak z parametrami algorytmu");
-            }
-
-            Dictionary<string, Dictionary<string, double>> passedInitialParameters = new Dictionary<string, Dictionary<string, double>> { };
-            foreach (string key in Request.Form.Keys)
-            {
-                string[] keyIndices = key.Split('-');
-                if (keyIndices.Length == 2)
-                {
-                    string parameterName = keyIndices[0];
-                    string parameterPropertyName = keyIndices[1];
-                    if (!passedInitialParameters.ContainsKey(parameterName))
-                    {
-                        passedInitialParameters.Add(parameterName, new Dictionary<string, double> { });
-                    }
-                    string parameterValueString = Request.Form[key];
-                    passedInitialParameters[parameterName].Add(parameterPropertyName, Convert.ToDouble(parameterValueString.Replace('.', ',')));
-                }
-            }
 
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
 
@@ -198,17 +166,18 @@ namespace AlgorithmsWebApplication.Controllers
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
 
-            double[] parameterStartingValues = passedInitialParameters.Select((parameter) => parameter.Value["lowerBound"]).ToArray();
-            double[] parameterStepSisters= passedInitialParameters.Select((parameter) => parameter.Value["step"]).ToArray();
-            double[] parameterMaxValues = passedInitialParameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
+            double[] parameterStartingValues = parameters.Select((parameter) => parameter.Value["lowerBound"]).ToArray();
+            double[] parameterStepValues = parameters.Select((parameter) => parameter.Value["step"]).ToArray();
+            double[] parameterMaxValues = parameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
 
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
-            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepSisters, parameterMaxValues)) {
+            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues))
+            {
                 object? instance = Activator.CreateInstance(type);
                 type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
-                type.GetMethod("Solve")?.Invoke(instance, new object[]{ delgt, testDomain, parameterValues });
+                type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
 
@@ -219,30 +188,78 @@ namespace AlgorithmsWebApplication.Controllers
                     Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
                 }
                 type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
-                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] {});
+                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] { });
                 (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
             }
-            return Ok(new { xBestMax, fBestMax, bestParameterValues });
+            return new { xBestMax, fBestMax, bestParameterValues };
+        }
+
+        [Route("/home/run")]
+        [HttpPost]
+        public async Task<IActionResult> RunSingle([FromForm] string algName, [FromForm] string funName)
+        {
+            Dictionary<string, Dictionary<string, double>> parameters = new Dictionary<string, Dictionary<string, double>> { };
+            foreach (string key in Request.Form.Keys)
+            {
+                string[] keyIndices = key.Split('-');
+                if (keyIndices.Length == 2)
+                {
+                    string parameterName = keyIndices[0];
+                    string parameterPropertyName = keyIndices[1];
+                    if (!parameters.ContainsKey(parameterName))
+                    {
+                        parameters.Add(parameterName, new Dictionary<string, double> { });
+                    }
+                    string parameterValueString = Request.Form[key];
+                    parameters[parameterName].Add(parameterPropertyName, Convert.ToDouble(parameterValueString.Replace('.', ',')));
+                }
+            }
+
+            var result = Run(algName, funName, parameters);
+            return Ok(result);
         }
 
         [Route("/home/runs")]
         [HttpPost]
-        public async Task<IActionResult> RunM([FromForm] List<string> algNames, [FromForm] List<string> funNames)
+        public async Task<IActionResult> RunMultiple([FromForm] List<string> algNames, [FromForm] List<string> funNames)
         {
-            object?[] tmp = new object[algNames.Count * funNames.Count];
+            // co za rak
+            Dictionary<string, Dictionary<string, Dictionary<string, double>>> algorithmsParameters = new Dictionary<string, Dictionary<string, Dictionary<string, double>>> { };
+            foreach (string key in Request.Form.Keys)
+            {
+                string[] keyIndices = key.Split('-');
+                if (keyIndices.Length == 3)
+                {
+                    string algName = keyIndices[0];
+
+                    if (!algorithmsParameters.ContainsKey(algName))
+                    {
+                        algorithmsParameters.Add(algName, new Dictionary<string, Dictionary<string, double>> { });
+                    }
+
+                    string parameterName = keyIndices[1];
+                    string parameterPropertyName = keyIndices[2];
+
+                    if (!algorithmsParameters[algName].ContainsKey(parameterName))
+                    {
+                        algorithmsParameters[algName].Add(parameterName, new Dictionary<string, double> { });
+                    }
+                    string parameterValueString = Request.Form[key];
+                    algorithmsParameters[algName][parameterName].Add(parameterPropertyName, Convert.ToDouble(parameterValueString.Replace('.', ',')));
+                }
+            }
+
+            object?[] results = new object[algNames.Count * funNames.Count];
             int i = 0;
             foreach (string alg in algNames) 
             {
                 foreach (string fun in funNames)
                 {
-                    var result = await Run(alg, fun);
-                    var cast = result as OkObjectResult;
-                    var val = cast.Value;
-                    tmp[i] = val;
+                    results[i] = await Run(alg, fun, algorithmsParameters[alg]);
                     i++;
                 }
             }
-            return Ok(new { tmp });
+            return Ok(new { results });
         }
     }
 }

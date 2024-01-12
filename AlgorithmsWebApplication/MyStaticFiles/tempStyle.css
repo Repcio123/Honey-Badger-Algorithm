@@ -74,3 +74,15 @@ button {
     margin-bottom: 10px;
 }
 
+.parameters {
+  flex: 0 0 50%;
+}
+
+.parameters > div {
+  padding: 1rem;
+}
+
+#multiParamsSection {
+  display: flex;
+  flex-wrap: wrap;
+}

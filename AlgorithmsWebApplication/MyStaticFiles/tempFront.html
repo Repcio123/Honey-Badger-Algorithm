@@ -4,14 +4,12 @@
         <meta charset="UTF-8">
         <script type="module">
             import { html, render } from 'https://esm.sh/htm/preact/standalone'
+			let algorithmMulSelect;
 
-            let resultPanel;
-            let mainForm;
-            function getAvailableAlgorithms() {
+            function getAvailableAlgorithmsAndFunctions() {
                 const algorithmSelect = document.querySelector("#algorithmSelect");
-                const algorithmMulSelect = document.querySelector("#algorithmMulSelect");
                 const funSelect = document.querySelector("#funSelect");
-                const funMulSelect = document.querySelector("#funMulSelect");
+				const funMulSelect = document.querySelector("#funMulSelect");
                 fetch("/home").then((response) => response.json()).then((data) => {
                     algorithmSelect.innerHTML = ""
                     algorithmSelect.appendChild(document.createElement("option"))
@@ -19,17 +17,19 @@
                         let element = document.createElement("option");
                         element.innerHTML = fileName;
                         element.value = fileName;
-                        algorithmSelect.append(element);
-                    }
-                    algorithmMulSelect.innerHTML = ""
-                    algorithmMulSelect.appendChild(document.createElement("option"))
-                    for (let fileName of data) {
-                        let element = document.createElement("option");
-                        element.innerHTML = fileName;
-                        element.value = fileName;
-                        algorithmMulSelect.append(element);
-                    }
+						algorithmSelect.append(element);
+					}
+
+					algorithmMulSelect.innerHTML = ""
+					algorithmMulSelect.appendChild(document.createElement("option"))
+					for (let fileName of data) {
+						let element = document.createElement("option");
+						element.innerHTML = fileName;
+						element.value = fileName;
+						algorithmMulSelect.append(element);
+					}
                 });
+				
                 fetch("/home/fun").then((response) => response.json()).then((data) => {
                     funSelect.innerHTML = ""
                     funSelect.appendChild(document.createElement("option"))
@@ -39,7 +39,8 @@
                         element.value = fileName;
                         funSelect.append(element);
                     }
-                    funMulSelect.innerHTML = ""
+
+					funMulSelect.innerHTML = ""
                     funMulSelect.appendChild(document.createElement("option"))
                     for (let fileName of data) {
                         let element = document.createElement("option");
@@ -52,19 +53,19 @@
 
             function Parameter(props) {
                 return html`
-                            <div style="outline: 1px solid black">
-                                <label>Intrinsic parameter ${props.name}:</label>
-                                <div> upper:
-                                    <input name=${`${props.name}-upperBound`} value=${props.upperBound} type="number" step="any" />
-                                </div>
-                                <div> lower:
-                                    <input name=${`${props.name}-lowerBound`} value=${props.lowerBound} type="number" step="any" />
-                                </div>
-                                <div> step:
-                                    <input name=${`${props.name}-step`} value=${0.1} type="number" step="any" />
-                                </div>
-                            </div>
-                        `;
+                      <div>
+                          <label>Intrinsic parameter ${props.name}:</label>
+                          <div> lower:
+                              <input name=${`${props.name}-lowerBound`} value=${props.lowerBound} type="number" step="any" />
+                          </div>
+                          <div> upper:
+                              <input name=${`${props.name}-upperBound`} value=${props.upperBound} type="number" step="any" />
+                          </div>
+                          <div> step:
+                              <input name=${`${props.name}-step`} value=${0.1} type="number" step="any" />
+                          </div>
+                      </div>
+                  `;
             }
 
             function getAlgorithmParameters() {
@@ -81,25 +82,98 @@
 
                     render(
                         html`
-                                    <div style="outline: 1px solid black">
-                                        ${paramsInfo.map((param) => (
-                            html`<${Parameter} name=${param.name} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
-                        ))}
-                                    </div>
-                                `,
+                            <div style="outline: 1px solid black">
+                                ${paramsInfo.map((param) => (
+                                    html`<${Parameter} name=${param.name} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
+                                ))}
+                            </div>
+                        `,
                         paramsSection
                     )
 
 
                 })
             }
-            function init() {
+
+			let cachedAlgorithmsParameters = {};
+			async function fetchMultipleAlgorithmsParameters() {
+				if (!algorithmMulSelect) {
+					return;
+				}
+
+				let newSelectedAlgorithmsParameters = {}
+				const promises = []
+				for (let { selected, value: algorithmName } of algorithmMulSelect.options) {
+					// if the option is null or not selected, skip
+					if (!selected || !algorithmName) {
+						continue;
+					}
+					// if the option has already been fetched, use the cached version instead
+					if (cachedAlgorithmsParameters[algorithmName]) {
+						newSelectedAlgorithmsParameters[algorithmName] = [...cachedAlgorithmsParameters[algorithmName]];
+						continue;
+					}
+
+					// fetch the parameters for selected option, add algorithmName for grouping to the result
+					const getAlgorithmNameWithParameters = fetch(`/home/params?algorithmFileName=${algorithmName}`).then((response) => response.json()).then((data) => ({ algorithmName, ...data }));
+
+					// save the promise to array, so that it doesn't block the function execution
+					promises.push(getAlgorithmNameWithParameters)
+				}
+
+				// once every fetch finished, handle responses 
+				const fetchedMultipleData = await Promise.allSettled(promises).then((results) => {
+					// group parameters by algorithm name
+					const accumulator = {};
+					for (let { status, value } of results) {
+						if (status === 'rejected') {
+							throw "Nie udało się pobrać parametrów dla funkcji";
+							return;
+						}
+						accumulator[value.algorithmName] = [ ...value.paramsInfo ];	
+					}
+
+					return accumulator;
+				});
+
+
+				newSelectedAlgorithmsParameters = { ...newSelectedAlgorithmsParameters, ...fetchedMultipleData }
+				cachedAlgorithmsParameters = { ...cachedAlgorithmsParameters, ...fetchedMultipleData }
+					
+
+				return newSelectedAlgorithmsParameters
+			}
+
+			async function fillSelectedMultipleAlgorithmsParameters() {
+                const multiParamsSection = document.querySelector("#multiParamsSection");
+				multiParamsSection.innerHTML = '';
+				const algorithmsParameters = await fetchMultipleAlgorithmsParameters();
+
+				render(
+					html`
+						${Object.entries(algorithmsParameters).map(([algorithmName, parameters]) => (
+							html`
+								<div class="parameters" style="outline: 1px solid black">
+									<h4>${algorithmName}:</h4>
+									${parameters.map((param) => (
+										html`<${Parameter} name=${`${algorithmName}-${param.name}`} upperBound=${parseFloat(param.upperBoundary)} lowerBound=${parseFloat(param.lowerBoundary)}/>`
+									))}
+								</div>
+							`
+						))}
+					`,
+					multiParamsSection
+				)
+			}
+
+			function init() {
                 const algorithmSelect = document.querySelector("#algorithmSelect");
-                mainForm = document.getElementById('main-form')
-                resultPanel = document.querySelector("#resultPanel")
-                getAvailableAlgorithms();
+                algorithmMulSelect = document.querySelector("#algorithmMulSelect");
+                getAvailableAlgorithmsAndFunctions();
                 algorithmSelect.onchange = getAlgorithmParameters
+                algorithmMulSelect.onchange = fillSelectedMultipleAlgorithmsParameters
             }
+
             window.onload = init;
         </script>
     </head>
@@ -155,6 +229,7 @@
                 <select id="algorithmMulSelect" multiple name="algNames">
                     <option name="null" value=""></option>
                 </select>
+                <div id="multiParamsSection"></div>
             </div>
             <div>
                 <label for="funMulSelect">Select fitness function</label>

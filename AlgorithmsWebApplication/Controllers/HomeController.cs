@@ -158,7 +158,7 @@ namespace AlgorithmsWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> Run([FromForm] string algName, [FromForm] string funName)
         {
-            WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
+            WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath + "state\\" + algName.Split('.')[0] + "_" + funName.Split('.')[0] +".txt");
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
             Assembly assembly = Assembly.LoadFrom(dll);
             IEnumerable parameters = getParameters(algName) as IEnumerable;
@@ -235,8 +235,10 @@ namespace AlgorithmsWebApplication.Controllers
                     Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
                 }
                 type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
-                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] {});
-                (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
+
+                // this is only and example on how to theoritically load from state that i came up with
+                // var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] {});
+                // (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
             }
             string xBestMaxString = string.Join(", ", (xBestMax as double[]));
 

@@ -8,6 +8,7 @@ using HoneyBagder.StateReader;
 using HoneyBagder.StateWriter;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,20 @@ namespace HoneyBagder.OptimizationAlgorithm
                 LowerBoundary = 1,
                 UpperBoundary = 6,
                 Name = "ihabenowillto",
+            },
+            new ParamInfo
+            {
+                Description = "This is a description",
+                LowerBoundary = 20,
+                UpperBoundary = 20,
+                Name = "population",
+            },
+             new ParamInfo
+            {
+                Description = "This is a description",
+                LowerBoundary = 20,
+                UpperBoundary = 20,
+                Name = "iteration",
             }
         };
         public IStateWriter Writer { get; set; } = new DefautlStateWriter();
@@ -41,10 +56,11 @@ namespace HoneyBagder.OptimizationAlgorithm
         public IGeneratePDFReport PdfReportGenerator { get; set; } = new DefaultReportGenerator();
         public double[] XBest { get; set; }
         public double FBest { get; set; }
+        public int FCounter { get; set; }
         public int NumberOfEvaluationFitnessFunction { get; set; }
         private static readonly double Epsilon = Math.Pow(2, -52); // smallest possible number in C#
 
-        public int population = 20, iterations = 20;
+        
 
         public void Solve(
                 fitnessFunction f,
@@ -58,7 +74,8 @@ namespace HoneyBagder.OptimizationAlgorithm
             }
             double b = parameters[0];
             double c = parameters[1];
-
+            int population = (int)parameters[2];
+            int iterations = (int)parameters[3];
             double[][] positions = new double[population][];
             var random = new Random();
 
@@ -160,7 +177,7 @@ namespace HoneyBagder.OptimizationAlgorithm
                         new_position = Add(positions[best_row_idx], ScalarMultiply(positions[best_row_idx], flag * random.NextDouble() * a));
                     }
                     double new_prey_value = f(new_position);
-
+                    counter++;
                     if (new_prey_value < population_futness_values[population_index])
                     {
                         positions[population_index] = new_position;
@@ -183,9 +200,12 @@ namespace HoneyBagder.OptimizationAlgorithm
 
             XBest = positions[best_row_idx];
             FBest = best_fitness_value;
+            NumberOfEvaluationFitnessFunction = counter;
         }
 
         private List<IObserver> _observers = new List<IObserver>();
+        int counter = 0;
+
         public void Attach(IObserver observer) 
         {
             _observers.Add(observer);

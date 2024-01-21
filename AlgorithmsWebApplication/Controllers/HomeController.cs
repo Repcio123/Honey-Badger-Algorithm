@@ -19,6 +19,7 @@ using iText.Layout.Properties;
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf.Canvas.Draw;
 using System.Xml.Linq;
+using System.Diagnostics.Metrics;
 
 namespace AlgorithmsWebApplication.Controllers
 {
@@ -28,6 +29,7 @@ namespace AlgorithmsWebApplication.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private IHostEnvironment _hostingEnvironment;
+        
 
         public HomeController(ILogger<HomeController> logger, IHostEnvironment hostEnvironment)
         {
@@ -267,12 +269,13 @@ namespace AlgorithmsWebApplication.Controllers
 
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
+            int counter =  1;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
-            int fitnessFunctionCalls = 0;
+            
 
             foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues)) {
 
-                fitnessFunctionCalls++; // Increment the counter for each fitness function call
+                
 
 
                 object? instance = Activator.CreateInstance(type);
@@ -280,6 +283,7 @@ namespace AlgorithmsWebApplication.Controllers
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
+                counter = (int)(type.GetProperty("NumberOfEvaluationFitnessFunction")?.GetValue(instance));
 
                 if (Math.Abs(fBestMax) > Math.Abs(fBest))
                 {
@@ -296,7 +300,7 @@ namespace AlgorithmsWebApplication.Controllers
             {
                 algName = algName,
                 fBestMax = fBestMax,
-                fitnessFunctionCalls = fitnessFunctionCalls,
+                fitnessFunctionCalls = counter,
                 funName = funName,
                 xBestMax = xBestMax as double[]
             };
@@ -326,7 +330,8 @@ namespace AlgorithmsWebApplication.Controllers
             }
 
             AlgorithmResultDTO[] results = new AlgorithmResultDTO[1];
-            var result = Run(algName, funName, parameters);
+            var result = await Run(algName, funName, parameters);
+            results[0] = result;
             raport(results);
             return Ok(result);
         }

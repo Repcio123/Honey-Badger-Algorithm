@@ -8,6 +8,8 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf.Canvas.Draw;
+using System.Xml.Linq;
+using System.Diagnostics.Metrics;
 using iText.Layout.Properties;
 
 namespace AlgorithmsWebApplication.Controllers
@@ -18,6 +20,7 @@ namespace AlgorithmsWebApplication.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private IHostEnvironment _hostingEnvironment;
+        
 
         public HomeController(ILogger<HomeController> logger, IHostEnvironment hostEnvironment)
         {
@@ -102,6 +105,7 @@ namespace AlgorithmsWebApplication.Controllers
             public string algName { get; set; }
             public string funName { get; set; }
             public int fitnessFunctionCalls { get; set; }
+            public int Counter { get; set; }
         }
 
         IEnumerable<double[]> incrementParameters(double[] startValues, double[] steps, double[] maxes)
@@ -253,19 +257,18 @@ namespace AlgorithmsWebApplication.Controllers
 
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
+            int counter =  1;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
-            int fitnessFunctionCalls = 0;
+            
 
             foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues)) {
-
-                fitnessFunctionCalls++; // Increment the counter for each fitness function call
-
-
                 object? instance = Activator.CreateInstance(type);
                 type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
+                counter = (int)(type.GetProperty("NumberOfEvaluationFitnessFunction")?.GetValue(instance));
+
                 if (Math.Abs(fBestMax) > Math.Abs(fBest))
                 {
                     xBestMax = xBest;
@@ -279,7 +282,7 @@ namespace AlgorithmsWebApplication.Controllers
             {
                 algName = algName,
                 fBestMax = fBestMax,
-                fitnessFunctionCalls = fitnessFunctionCalls,
+                fitnessFunctionCalls = counter,
                 funName = funName,
                 xBestMax = xBestMax as double[]
             };
@@ -311,7 +314,8 @@ namespace AlgorithmsWebApplication.Controllers
             }
 
             AlgorithmResultDTO[] results = new AlgorithmResultDTO[1];
-            var result = Run(algName, funName, parameters);
+            var result = await Run(algName, funName, parameters);
+            results[0] = result;
             raport(results);
             return Ok(result);
         }

@@ -27,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="itext7" Version="7.1.14" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Implementations\C#\HoneyBagder\HoneyBagder\HoneyBagder.csproj" />
     <ProjectReference Include="..\Implementations\C#\HoneyBagder\testFitnessFunction\testFitnessFunction.csproj" />
   </ItemGroup>

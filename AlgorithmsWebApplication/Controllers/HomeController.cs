@@ -220,14 +220,20 @@ namespace AlgorithmsWebApplication.Controllers
 
         public async Task<AlgorithmResultDTO> Run(string algName, string funName, Dictionary<string, Dictionary<string, double>> parameters)
         {
-            WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
+            string writerPath = _hostingEnvironment.ContentRootPath + "/state/" + algName + funName;
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
-            Assembly assembly = Assembly.LoadFrom(dll);
+
+            var alc = new AssemblyLoadContext("g", true);
+            Assembly assembly = alc.LoadFromAssemblyPath(dll);
 
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
+            Type? writerObserverType = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "WriterObserver");
+            object writerObserver = Activator.CreateInstance(writerObserverType, new object[] { writerPath });
 
             string funDll = Path.Combine(_hostingEnvironment.ContentRootPath, "functions", funName);
-            Assembly funAssembly = Assembly.LoadFrom(funDll);
+
+            var alc2 = new AssemblyLoadContext("g2", true);
+            Assembly funAssembly = alc.LoadFromAssemblyPath(funDll);
 
             Type typeWithFitnessFunction = funAssembly.GetTypes().First(type => type.GetMethods().Any(m => m.Name == "fitnessFunction"));
             Type? delegateType = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "fitnessFunction");
@@ -260,9 +266,13 @@ namespace AlgorithmsWebApplication.Controllers
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
+                if (Math.Abs(fBestMax) > Math.Abs(fBest))
+                {
+                    xBestMax = xBest;
+                    fBestMax = fBest;
+                    Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
+                }
                 type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
-                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] { });
-                (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
             }
 
             var result = new AlgorithmResultDTO
@@ -274,6 +284,8 @@ namespace AlgorithmsWebApplication.Controllers
                 xBestMax = xBestMax as double[]
             };
 
+            alc2.Unload();
+            alc.Unload();
             return result;
         }
 

@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="algorithms\" />
+    <Folder Include="Nowy folder\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

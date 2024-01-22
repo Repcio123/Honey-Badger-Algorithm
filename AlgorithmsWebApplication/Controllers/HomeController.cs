@@ -254,14 +254,13 @@ namespace AlgorithmsWebApplication.Controllers
             double[] parameterStartingValues = parameters.Select((parameter) => parameter.Value["lowerBound"]).ToArray();
             double[] parameterStepValues = parameters.Select((parameter) => parameter.Value["step"]).ToArray();
             double[] parameterMaxValues = parameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
-
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
             int counter =  1;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
-            
 
-            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues)) {
+            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues))
+            {
                 object? instance = Activator.CreateInstance(type);
                 type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
@@ -286,6 +285,7 @@ namespace AlgorithmsWebApplication.Controllers
                 funName = funName,
                 xBestMax = xBestMax as double[]
             };
+
 
             alc2.Unload();
             alc.Unload();
@@ -350,19 +350,20 @@ namespace AlgorithmsWebApplication.Controllers
                 }
             }
 
-            List<AlgorithmResultDTO> results = new List<AlgorithmResultDTO> { };
+            List<Task<AlgorithmResultDTO>> results = new List<Task<AlgorithmResultDTO>> { };
             int i = 0;
             foreach (string alg in algNames) 
             {
                 foreach (string fun in funNames)
                 {
-                    results.Add(await Run(alg, fun, algorithmsParameters[alg]));
+                    results.Add(Run(alg, fun, algorithmsParameters[alg]));
                     i++;
                 }
             }
 
-            raport(results.ToArray());
-            return Ok(results);
+            var res = Task.WhenAll(results).Result;
+            raport(res);
+            return Ok(res);
         }
     }
 }

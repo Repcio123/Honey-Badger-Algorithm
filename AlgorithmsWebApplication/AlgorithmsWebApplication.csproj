@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="algorithms\" />
+    <Folder Include="Nowy folder\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
@@ -33,6 +34,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Implementations\C#\HoneyBagder\HoneyBagder\HoneyBagder.csproj" />
     <ProjectReference Include="..\Implementations\C#\HoneyBagder\testFitnessFunction\testFitnessFunction.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="itext7" Version="7.1.14" />
   </ItemGroup>
 
 </Project>

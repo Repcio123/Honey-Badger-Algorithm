@@ -19,7 +19,7 @@ namespace HoneyBadger
     {
         static void Main(string[] args)
         {
-            Server.Run();
+            Console.WriteLine("jdjd");
         }
     }
 }

@@ -1,25 +1,16 @@
 using HoneyBagder.MiscInterfaces;
 using HoneyBagder.StateReader;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
 using System.Runtime.Loader;
-using System.Security.Cryptography;
 using iText.Kernel.Pdf;
 using iText.Layout;
-using iText.Layout.Borders;
 using iText.Layout.Element;
-using iText.Layout.Properties;
-
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf.Canvas.Draw;
 using System.Xml.Linq;
 using System.Diagnostics.Metrics;
+using iText.Layout.Properties;
 
 namespace AlgorithmsWebApplication.Controllers
 {
@@ -71,8 +62,9 @@ namespace AlgorithmsWebApplication.Controllers
             }
             return BadRequest();
         }
-
-        object? getParameters(string algorithmFileName)
+        [Route("/home/params")]
+        [HttpGet]
+        public async Task<IActionResult> Postg([FromQuery] string algorithmFileName)
         {
             string pathToAssembly = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algorithmFileName);
             var alc = new AssemblyLoadContext("g", true);
@@ -81,17 +73,9 @@ namespace AlgorithmsWebApplication.Controllers
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
 
             alc.Unload();
-
+            
             object? instance = Activator.CreateInstance(type);
             var paramsInfo = type.GetProperty("ParamsInfo")?.GetValue(instance);
-            return paramsInfo;
-        }
-
-        [Route("/home/params")]
-        [HttpGet]
-        public async Task<IActionResult> Postg([FromQuery] string algorithmFileName)
-        {
-            var paramsInfo = getParameters(algorithmFileName);
             return Ok(new { paramsInfo });
         }
         [Route("/home/fun")]
@@ -112,9 +96,16 @@ namespace AlgorithmsWebApplication.Controllers
             return BadRequest();
         }
 
-        public interface Parameter
+        //public delegate double fitnessFunction(double[] args);
+
+        public class AlgorithmResultDTO
         {
-            string Name { get; set; }
+            public double[] xBestMax { get; set; }
+            public double fBestMax { get; set; }
+            public string algName { get; set; }
+            public string funName { get; set; }
+            public int fitnessFunctionCalls { get; set; }
+            public int Counter { get; set; }
         }
 
         IEnumerable<double[]> incrementParameters(double[] startValues, double[] steps, double[] maxes)
@@ -156,15 +147,6 @@ namespace AlgorithmsWebApplication.Controllers
             }
         }
 
-        public class AlgorithmResultDTO
-        {
-            public double[] xBestMax { get; set; }
-            public double fBestMax { get; set; }
-            public string algName { get; set; }
-            public string funName { get; set; }
-            public int fitnessFunctionCalls { get; set; }
-        }
-
         public void raport(AlgorithmResultDTO[] algorithmsResultsDto)
         {
             string reportsFolder = Path.Combine(_hostingEnvironment.ContentRootPath, "raports");
@@ -182,7 +164,7 @@ namespace AlgorithmsWebApplication.Controllers
                 {
                     var document = new iText.Layout.Document(pdfDocument);
 
-                    // Dodaj nag³ówek
+                    // Dodaj nagï¿½ï¿½wek
                     document.Add(new Paragraph("Optimization Results")
                         .SetTextAlignment(TextAlignment.CENTER)
                         .SetFontSize(20));
@@ -195,14 +177,14 @@ namespace AlgorithmsWebApplication.Controllers
                             .SetFontSize(12)
                             .SetFontColor(DeviceGray.BLACK));
 
-                        // Dodaj datê i godzinê
+                        // Dodaj datï¿½ i godzinï¿½
                         var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
                         var currentTime = DateTime.Now.ToString("HH:mm:ss");
                         document.Add(new Paragraph($"Date: {currentDate}, Time: {currentTime}")
                             .SetTextAlignment(TextAlignment.LEFT)
                             .SetFontSize(14));
 
-                        // Dodaj sekcjê z wynikami
+                        // Dodaj sekcjï¿½ z wynikami
                         document.Add(new Paragraph("Results:")
                             .SetTextAlignment(TextAlignment.LEFT)
                             .SetFontSize(16));
@@ -221,20 +203,20 @@ namespace AlgorithmsWebApplication.Controllers
                             .SetTextAlignment(TextAlignment.LEFT)
                             .SetFontSize(14));
 
-                        // Dodaj linie oddzielaj¹ce
+                        // Dodaj linie oddzielajï¿½ce
                         document.Add(new LineSeparator(new SolidLine())
                             .SetMarginTop(10)
                             .SetMarginBottom(10));
                     }
                     
 
-                    // Dodaj stopkê
+                    // Dodaj stopkï¿½
                     document.Add(new Paragraph("Generated by Honey Team Optimalization Algorithm")
                         .SetTextAlignment(TextAlignment.RIGHT)
                         .SetFontSize(10)
                         .SetFontColor(DeviceGray.GRAY));
 
-                    // Zakoñcz dokument
+                    // Zakoï¿½cz dokument
                     document.Close();
                 }
             }
@@ -242,14 +224,20 @@ namespace AlgorithmsWebApplication.Controllers
 
         public async Task<AlgorithmResultDTO> Run(string algName, string funName, Dictionary<string, Dictionary<string, double>> parameters)
         {
-            WriterObserver writerObserver = new WriterObserver(_hostingEnvironment.ContentRootPath);
+            string writerPath = _hostingEnvironment.ContentRootPath + "/state/" + algName + funName;
             string dll = Path.Combine(_hostingEnvironment.ContentRootPath, "algorithms", algName);
-            Assembly assembly = Assembly.LoadFrom(dll);
+
+            var alc = new AssemblyLoadContext("g", true);
+            Assembly assembly = alc.LoadFromAssemblyPath(dll);
 
             Type? type = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "OptimizationAlgorithm");
+            Type? writerObserverType = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "WriterObserver");
+            object writerObserver = Activator.CreateInstance(writerObserverType, new object[] { writerPath });
 
             string funDll = Path.Combine(_hostingEnvironment.ContentRootPath, "functions", funName);
-            Assembly funAssembly = Assembly.LoadFrom(funDll);
+
+            var alc2 = new AssemblyLoadContext("g2", true);
+            Assembly funAssembly = alc.LoadFromAssemblyPath(funDll);
 
             Type typeWithFitnessFunction = funAssembly.GetTypes().First(type => type.GetMethods().Any(m => m.Name == "fitnessFunction"));
             Type? delegateType = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "fitnessFunction");
@@ -266,18 +254,13 @@ namespace AlgorithmsWebApplication.Controllers
             double[] parameterStartingValues = parameters.Select((parameter) => parameter.Value["lowerBound"]).ToArray();
             double[] parameterStepValues = parameters.Select((parameter) => parameter.Value["step"]).ToArray();
             double[] parameterMaxValues = parameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
-
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
             int counter =  1;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
-            
 
-            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues)) {
-
-                
-
-
+            foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues))
+            {
                 object? instance = Activator.CreateInstance(type);
                 type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
@@ -292,8 +275,6 @@ namespace AlgorithmsWebApplication.Controllers
                     Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
                 }
                 type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
-                var tmp = type.GetMethod("get_Reader").Invoke(instance, new object[] { });
-                (tmp as DefaultStateReader).LoadFromFileStateOfAlgorithm(_hostingEnvironment.ContentRootPath);
             }
 
             var result = new AlgorithmResultDTO
@@ -305,6 +286,9 @@ namespace AlgorithmsWebApplication.Controllers
                 xBestMax = xBestMax as double[]
             };
 
+
+            alc2.Unload();
+            alc.Unload();
             return result;
         }
 
@@ -366,19 +350,20 @@ namespace AlgorithmsWebApplication.Controllers
                 }
             }
 
-            List<AlgorithmResultDTO> results = new List<AlgorithmResultDTO> { };
+            List<Task<AlgorithmResultDTO>> results = new List<Task<AlgorithmResultDTO>> { };
             int i = 0;
             foreach (string alg in algNames) 
             {
                 foreach (string fun in funNames)
                 {
-                    results.Add(await Run(alg, fun, algorithmsParameters[alg]));
+                    results.Add(Run(alg, fun, algorithmsParameters[alg]));
                     i++;
                 }
             }
 
-            raport(results.ToArray());
-            return Ok(results);
+            var res = Task.WhenAll(results).Result;
+            raport(res);
+            return Ok(res);
         }
     }
 }

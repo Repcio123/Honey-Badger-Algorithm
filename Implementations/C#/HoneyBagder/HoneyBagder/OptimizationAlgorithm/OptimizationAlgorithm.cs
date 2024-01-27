@@ -38,13 +38,6 @@ namespace HoneyBagder.OptimizationAlgorithm
             new ParamInfo
             {
                 Description = "This is a description",
-                LowerBoundary = 1,
-                UpperBoundary = 6,
-                Name = "redundant",
-            },
-            new ParamInfo
-            {
-                Description = "This is a description",
                 LowerBoundary = 20,
                 UpperBoundary = 20,
                 Name = "population",
@@ -81,8 +74,8 @@ namespace HoneyBagder.OptimizationAlgorithm
             }
             double b = parameters[0];
             double c = parameters[1];
-            int population = (int)parameters[3];
-            int iterations = (int)parameters[4];
+            int population = (int)parameters[2];
+            int iterations = (int)parameters[3];
             double[][] positions = new double[population][];
             var random = new Random();
 
@@ -185,13 +178,13 @@ namespace HoneyBagder.OptimizationAlgorithm
                     }
                     double new_prey_value = f(new_position);
                     counter++;
-                    if (new_prey_value < Math.Abs(population_futness_values[population_index]))
+                    if (Math.Abs(new_prey_value) < Math.Abs(population_futness_values[population_index]))
                     {
                         positions[population_index] = new_position;
 
                         population_futness_values[population_index] = new_prey_value;
 
-                        if (new_prey_value < Math.Abs(best_fitness_value))
+                        if (Math.Abs(new_prey_value) < Math.Abs(best_fitness_value))
                         {
                             best_fitness_value = new_prey_value;
                             best_row_idx = population_index;

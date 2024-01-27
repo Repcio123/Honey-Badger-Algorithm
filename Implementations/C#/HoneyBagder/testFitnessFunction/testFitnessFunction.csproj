@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TSFDE-fractional-boundary-condition\TSFDE-fractional-boundary-condition.csproj" />
+  </ItemGroup>
+
 </Project>

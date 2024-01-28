@@ -1,7 +1,14 @@
-﻿namespace testFitnessFunction
+﻿
+using ZadanieAA;
+
+namespace testFitnessFunction
+
 {
     class Test
     {
-        public double fitnessFunction(params double[] arg) { return arg.Select(d => d + 2).Sum(); }
+
+        ObjectiveFunction of = new ObjectiveFunction();
+        public double fitnessFunction(params double[] arg) { return of.FunkcjaCelu.Wartosc(arg); }
+        
     }
 }

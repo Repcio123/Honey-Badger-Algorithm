@@ -243,8 +243,9 @@ namespace AlgorithmsWebApplication.Controllers
             Type? delegateType = assembly.GetExportedTypes().FirstOrDefault(Type => Type.Name == "fitnessFunction");
 
             Tuple<double, double>[] testDomain = {
-                Tuple.Create<double, double>(0, 5),
-                Tuple.Create<double, double>(0, 5)
+                Tuple.Create<double, double>(0.5, 1.5),
+                Tuple.Create<double, double>(0.5, 1.5),
+                Tuple.Create<double, double>(0.5, 1.5)
             };
 
             object? invokerInstance = Activator.CreateInstance(typeWithFitnessFunction);
@@ -262,7 +263,7 @@ namespace AlgorithmsWebApplication.Controllers
             foreach (var parameterValues in incrementParameters(parameterStartingValues, parameterStepValues, parameterMaxValues))
             {
                 object? instance = Activator.CreateInstance(type);
-                type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
+                //type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
                 type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
@@ -274,7 +275,7 @@ namespace AlgorithmsWebApplication.Controllers
                     fBestMax = fBest;
                     Array.Copy(parameterValues, bestParameterValues, parameterValues.Length);
                 }
-                type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
+               // type.GetMethod("Detach").Invoke(instance, new object[] { writerObserver });
             }
 
             var result = new AlgorithmResultDTO

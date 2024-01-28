@@ -191,8 +191,8 @@ namespace HoneyBagder.OptimizationAlgorithm
                         }
                     }
 
-                    Writer = new DefautlStateWriter(i, positions, population_futness_values);
-                    Notify();
+                   // Writer = new DefautlStateWriter(i, positions, population_futness_values);
+                    //Notify();
                 }
             }
 

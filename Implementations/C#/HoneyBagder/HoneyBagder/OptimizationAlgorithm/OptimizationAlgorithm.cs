@@ -8,6 +8,7 @@ using HoneyBagder.StateReader;
 using HoneyBagder.StateWriter;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
@@ -26,14 +27,14 @@ namespace HoneyBagder.OptimizationAlgorithm
                 LowerBoundary = 1,
                 UpperBoundary = 4,
                 Description = "This is a description",
-                Name = "someOtherWeirdShit",
+                Name = "b parameter",
             },
             new ParamInfo
             {
                 Description = "This is a description",
                 LowerBoundary = 1,
                 UpperBoundary = 6,
-                Name = "ihabenowillto",
+                Name = "c parameter",
             },
             new ParamInfo
             {
@@ -79,6 +80,8 @@ namespace HoneyBagder.OptimizationAlgorithm
             double[][] positions = new double[population][];
             var random = new Random();
 
+            Debug.WriteLine(b+" : "+c);
+
             for (int i = 0; i < population; i++)
             {
                 double[] k = new double[domain.Length];
@@ -103,6 +106,7 @@ namespace HoneyBagder.OptimizationAlgorithm
 
             for (int i = 0; i < iterations; i++)
             {
+                Debug.WriteLine(i);
                 double a = c * Math.Exp(-(double)i / (double)iterations);
                 for (int population_index = 0; population_index < population - 1; population_index++)
                 {
@@ -191,8 +195,8 @@ namespace HoneyBagder.OptimizationAlgorithm
                         }
                     }
 
-                    Writer = new DefautlStateWriter(i, positions, population_futness_values);
-                    Notify();
+                    // Writer = new DefautlStateWriter(i, positions, population_futness_values);
+                    // Notify();
                 }
             }
 

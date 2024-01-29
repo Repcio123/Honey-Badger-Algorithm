@@ -247,6 +247,7 @@ namespace AlgorithmsWebApplication.Controllers
                 Tuple.Create<double, double>(0, 5)
             };
 
+
             object? invokerInstance = Activator.CreateInstance(typeWithFitnessFunction);
             MethodInfo? invokerFunction = typeWithFitnessFunction.GetMethod("fitnessFunction");
             Delegate delgt = Delegate.CreateDelegate(delegateType, invokerInstance, invokerFunction);
@@ -256,6 +257,9 @@ namespace AlgorithmsWebApplication.Controllers
             double[] parameterMaxValues = parameters.Select((parameter) => parameter.Value["upperBound"]).ToArray();
             object? xBestMax = null;
             double fBestMax = double.PositiveInfinity;
+
+            var Domain = typeWithFitnessFunction.GetField("Domain").GetValue(invokerInstance);
+
             int counter =  1;
             double[] bestParameterValues = new double[parameterStartingValues.Length];
 
@@ -263,7 +267,7 @@ namespace AlgorithmsWebApplication.Controllers
             {
                 object? instance = Activator.CreateInstance(type);
                 type.GetMethod("Attach").Invoke(instance, new object[] { writerObserver });
-                type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, testDomain, parameterValues });
+                type.GetMethod("Solve")?.Invoke(instance, new object[] { delgt, Domain, parameterValues });
                 var xBest = type.GetProperty("XBest")?.GetValue(instance);
                 double fBest = Convert.ToDouble(type.GetProperty("FBest")?.GetValue(instance));
                 counter = (int)(type.GetProperty("NumberOfEvaluationFitnessFunction")?.GetValue(instance));

@@ -115,8 +115,8 @@ namespace HoneyBagder.OptimizationAlgorithm
                             Math.Cos(
                                 2.0 * Math.PI * random.NextDouble()
                             ) * (
-                                Math.Cos(
-                                    1 - 2.0 * Math.PI * random.NextDouble()
+                                1 - Math.Cos(
+                                    2.0 * Math.PI * random.NextDouble()
                                 )
                             )
                         );
@@ -178,13 +178,13 @@ namespace HoneyBagder.OptimizationAlgorithm
                     }
                     double new_prey_value = f(new_position);
                     counter++;
-                    if (Math.Abs(new_prey_value) < Math.Abs(population_futness_values[population_index]))
+                    if (Math.Abs(new_prey_value) <= Math.Abs(population_futness_values[population_index]))
                     {
                         positions[population_index] = new_position;
 
                         population_futness_values[population_index] = new_prey_value;
 
-                        if (Math.Abs(new_prey_value) < Math.Abs(best_fitness_value))
+                        if (Math.Abs(new_prey_value) <= Math.Abs(best_fitness_value))
                         {
                             best_fitness_value = new_prey_value;
                             best_row_idx = population_index;

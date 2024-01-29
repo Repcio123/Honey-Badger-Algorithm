@@ -1,7 +1,10 @@
 **/.vs/
 **/obj/
 **/bin/
-AlgorithmsWebApplication/functions/*
-AlgorithmsWebApplication/algorithms/*
+AlgorithmsWebApplication/functions/*.dll
+AlgorithmsWebApplication/algorithms/*.dll
+AlgorithmsWebApplication/state/*.dll
+AlgorithmsWebApplication/state/*.txt
+AlgorithmsWebApplication/raports/*.pdf
 *.txt
 *.pdf
